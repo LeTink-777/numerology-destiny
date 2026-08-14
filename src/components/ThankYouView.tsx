@@ -32,8 +32,11 @@ export default function ThankYouView() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           plan: "upsell",
-          name: data?.name ?? "",
-          email: data?.email ?? "",
+          userData: {
+            name: data?.name ?? "",
+            email: data?.email ?? "",
+            birthDate: data?.birthDate ?? "",
+          },
         }),
       });
 
@@ -103,6 +106,7 @@ export default function ThankYouView() {
             type="button"
             onClick={handleUpsell}
             disabled={pending}
+            aria-label="Добавить аудио разбор за 490 рублей"
             className="btn-primary mt-7 md:max-w-[280px]"
           >
             {pending ? "Переходим к оплате…" : "Добавить разбор"}

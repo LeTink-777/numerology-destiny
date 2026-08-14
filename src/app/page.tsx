@@ -1,7 +1,25 @@
-import { BookOpen, Briefcase, Heart, Layers, Star, Quote } from "lucide-react";
+import type { Metadata } from "next";
+import {
+  BookOpen,
+  Briefcase,
+  ChevronDown,
+  Heart,
+  HelpCircle,
+  Layers,
+  Star,
+  Quote,
+} from "lucide-react";
 import SiteNav from "@/components/SiteNav";
 import SiteFooter from "@/components/SiteFooter";
 import Hero from "@/components/Hero";
+import { FAQ_ITEMS, HOME_SCHEMAS, KEYWORDS, SITE_DESCRIPTION, SITE_TITLE } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  keywords: KEYWORDS,
+  alternates: { canonical: "/" },
+};
 
 const THREE_NUMBERS = [
   {
@@ -38,12 +56,28 @@ const TESTIMONIALS = [
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-cream">
+    <main
+      className="min-h-screen bg-cream"
+      itemScope
+      itemType="https://schema.org/WebApplication"
+    >
+      <meta itemProp="name" content="Нумерологический калькулятор" />
+      <meta itemProp="applicationCategory" content="LifestyleApplication" />
+      <meta itemProp="operatingSystem" content="Web" />
+
+      {HOME_SCHEMAS.map((schema, index) => (
+        <script
+          key={index}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
+
       <SiteNav />
       <Hero />
 
       {/* Секция 1 — что такое число судьбы */}
-      <section className="bg-cream-dark">
+      <section className="bg-cream-dark" aria-labelledby="about-destiny">
         <div className="mx-auto max-w-6xl px-5 py-20 md:px-8 md:py-28">
           <div className="grid gap-10 md:grid-cols-[0.9fr_1.1fr] md:gap-20">
             <div>
@@ -51,7 +85,10 @@ export default function Home() {
                 <BookOpen size={20} aria-hidden="true" />
                 <p className="eyebrow">Основы</p>
               </div>
-              <h2 className="font-display mt-4 text-[34px] font-light leading-[1.15] text-navy md:text-[46px]">
+              <h2
+                id="about-destiny"
+                className="font-display mt-4 text-[34px] font-light leading-[1.15] text-navy md:text-[46px]"
+              >
                 Что такое число судьбы
               </h2>
             </div>
@@ -75,11 +112,7 @@ export default function Home() {
               <hr className="rule-gold my-10" />
 
               <blockquote className="pull-quote">
-                <Quote
-                  size={22}
-                  aria-hidden="true"
-                  className="mb-3 text-gold"
-                />
+                <Quote size={22} aria-hidden="true" className="mb-3 text-gold" />
                 Числа — это язык, на котором вселенная говорит с каждым из нас
               </blockquote>
             </div>
@@ -88,13 +121,16 @@ export default function Home() {
       </section>
 
       {/* Секция 2 — три числа */}
-      <section className="bg-cream">
+      <section className="bg-cream" aria-labelledby="three-numbers">
         <div className="mx-auto max-w-6xl px-5 py-20 md:px-8 md:py-28">
           <div className="flex items-center gap-3 text-navy">
             <Layers size={20} aria-hidden="true" />
             <p className="eyebrow">Структура расчёта</p>
           </div>
-          <h2 className="font-display mt-4 max-w-[16ch] text-[34px] font-light leading-[1.15] text-navy md:text-[46px]">
+          <h2
+            id="three-numbers"
+            className="font-display mt-4 max-w-[16ch] text-[34px] font-light leading-[1.15] text-navy md:text-[46px]"
+          >
             Три числа которые определяют вашу жизнь
           </h2>
 
@@ -118,14 +154,80 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Секция 3 — социальное доказательство */}
-      <section className="bg-cream-dark">
+      {/* Секция 3 — вопросы и ответы */}
+      <section
+        className="bg-cream-dark"
+        aria-labelledby="faq-heading"
+        itemScope
+        itemType="https://schema.org/FAQPage"
+      >
+        <div className="mx-auto max-w-[860px] px-5 py-20 md:px-8 md:py-28">
+          <div className="flex items-center gap-3 text-navy">
+            <HelpCircle size={20} aria-hidden="true" />
+            <p className="eyebrow">Вопросы и ответы</p>
+          </div>
+          <h2
+            id="faq-heading"
+            className="font-display mt-4 text-[34px] font-light leading-[1.15] text-navy md:text-[46px]"
+          >
+            Частые вопросы о числе судьбы
+          </h2>
+
+          <div className="mt-12">
+            {FAQ_ITEMS.map((item) => (
+              <details
+                key={item.question}
+                className="faq-item group border-t border-line"
+                itemScope
+                itemProp="mainEntity"
+                itemType="https://schema.org/Question"
+              >
+                <summary
+                  className="flex cursor-pointer list-none items-center justify-between gap-6 py-6 text-left [&::-webkit-details-marker]:hidden"
+                  aria-label={item.question}
+                >
+                  <h3
+                    className="font-display text-[22px] font-normal leading-snug text-navy md:text-[26px]"
+                    itemProp="name"
+                  >
+                    {item.question}
+                  </h3>
+                  <ChevronDown
+                    size={20}
+                    aria-hidden="true"
+                    className="shrink-0 text-gold transition-transform duration-300 group-open:rotate-180"
+                  />
+                </summary>
+                <div
+                  itemScope
+                  itemProp="acceptedAnswer"
+                  itemType="https://schema.org/Answer"
+                >
+                  <p
+                    className="max-w-[70ch] pb-7 text-[16px] leading-[1.75] text-slate"
+                    itemProp="text"
+                  >
+                    {item.answer}
+                  </p>
+                </div>
+              </details>
+            ))}
+            <hr className="rule" />
+          </div>
+        </div>
+      </section>
+
+      {/* Секция 4 — социальное доказательство */}
+      <section className="bg-cream" aria-labelledby="social-proof">
         <div className="mx-auto max-w-6xl px-5 py-20 md:px-8 md:py-28">
           <div className="text-center">
             <p className="eyebrow">Отзывы</p>
-            <p className="font-display mt-4 text-[34px] font-light leading-tight text-navy md:text-[46px]">
+            <h2
+              id="social-proof"
+              className="font-display mt-4 text-[34px] font-light leading-tight text-navy md:text-[46px]"
+            >
               23 847 человек уже узнали своё число
-            </p>
+            </h2>
           </div>
 
           <hr className="rule-gold mx-auto mt-12 max-w-3xl" />

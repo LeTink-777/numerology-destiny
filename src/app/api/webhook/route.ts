@@ -11,6 +11,7 @@ type YooKassaNotification = {
     status?: string;
     paid?: boolean;
     amount?: { value?: string; currency?: string };
+    description?: string;
     metadata?: Record<string, string>;
   };
 };
@@ -24,32 +25,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Некорректный формат" }, { status: 400 });
   }
 
-  const event = notification.event;
   const payment = notification.object;
+  const orderId = payment?.metadata?.orderId ?? payment?.id ?? "unknown";
+  const email = payment?.metadata?.email ?? "";
 
-  switch (event) {
-    case "payment.succeeded": {
-      console.log("[yookassa] payment succeeded", {
-        id: payment?.id,
-        amount: payment?.amount?.value,
-        plan: payment?.metadata?.plan,
-        email: payment?.metadata?.email,
-        name: payment?.metadata?.name,
-      });
-      // Здесь подключается отправка расчёта на email клиента.
-      break;
-    }
-    case "payment.canceled": {
-      console.log("[yookassa] payment canceled", { id: payment?.id });
-      break;
-    }
-    case "refund.succeeded": {
-      console.log("[yookassa] refund succeeded", { id: payment?.id });
-      break;
-    }
-    default: {
-      console.log("[yookassa] unhandled event", event);
-    }
+  if (payment?.status === "succeeded") {
+    console.log("[yookassa] payment succeeded", {
+      orderId,
+      email,
+      paymentId: payment.id,
+      plan: payment.metadata?.plan,
+      amount: payment.amount?.value,
+    });
+    // Здесь подключается отправка готового расчёта на email покупателя.
+  } else {
+    console.log("[yookassa] notification", {
+      event: notification.event,
+      status: payment?.status,
+      orderId,
+    });
   }
 
   // ЮKassa считает уведомление доставленным при любом ответе 200.

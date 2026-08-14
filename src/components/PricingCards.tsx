@@ -71,9 +71,10 @@ const PLAN_CARDS: Plan[] = [
 type Props = {
   name: string;
   email: string;
+  birthDate: string;
 };
 
-export default function PricingCards({ name, email }: Props) {
+export default function PricingCards({ name, email, birthDate }: Props) {
   const spots = useClientSnapshot(getSpotsLeft);
   const [pendingPlan, setPendingPlan] = useState<PlanId | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -87,7 +88,10 @@ export default function PricingCards({ name, email }: Props) {
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, name, email }),
+        body: JSON.stringify({
+          plan,
+          userData: { name, email, birthDate },
+        }),
       });
 
       const payload = (await response.json()) as {
@@ -198,6 +202,7 @@ export default function PricingCards({ name, email }: Props) {
                   type="button"
                   onClick={() => handleCheckout(plan.id)}
                   disabled={isPending}
+                  aria-label={`Оформить тариф «${plan.title}» за ${formatPrice(plan.price)} рублей`}
                   className={`${plan.highlighted ? "btn-primary" : "btn-outline"} mt-4`}
                 >
                   {isPending

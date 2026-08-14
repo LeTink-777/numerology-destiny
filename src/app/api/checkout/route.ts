@@ -1,17 +1,35 @@
 import { NextResponse } from "next/server";
-import { isPlanId, PLANS, SITE_URL } from "@/lib/site";
+import { isPlanId, PLANS, SITE_URL, type PlanId } from "@/lib/site";
+import { createPayment, isPaymentsConfigured } from "@/lib/yukassa";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const YOOKASSA_API = "https://api.yookassa.ru/v3/payments";
-const SHOP_ID = process.env.YUKASSA_SHOP_ID || "1333494";
+const DESCRIPTIONS: Record<PlanId, string> = {
+  basic: "Базовый нумерологический расчёт",
+  full: "Полный нумерологический портрет",
+  premium: "Нумерологический портрет + аудио разбор",
+  upsell: "Аудио разбор нумерологического портрета",
+};
+
+type UserData = {
+  name?: unknown;
+  email?: unknown;
+  birthDate?: unknown;
+};
 
 type CheckoutBody = {
   plan?: unknown;
+  userData?: UserData;
+  // Поля верхнего уровня поддерживаются для обратной совместимости.
   name?: unknown;
   email?: unknown;
+  birthDate?: unknown;
 };
+
+function text(value: unknown, max = 200): string {
+  return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
 
 function originFrom(request: Request): string {
   const headerOrigin = request.headers.get("origin");
@@ -20,9 +38,7 @@ function originFrom(request: Request): string {
 }
 
 export async function POST(request: Request) {
-  const secretKey = process.env.YUKASSA_SECRET_KEY;
-
-  if (!secretKey) {
+  if (!isPaymentsConfigured()) {
     return NextResponse.json(
       { error: "Оплата временно недоступна. Платёжный ключ не настроен." },
       { status: 503 }
@@ -41,79 +57,38 @@ export async function POST(request: Request) {
   }
 
   const plan = PLANS[body.plan];
-  const email = typeof body.email === "string" ? body.email.trim() : "";
-  const name = typeof body.name === "string" ? body.name.trim() : "";
-  const origin = originFrom(request);
+  const userData = body.userData ?? {};
+  const name = text(userData.name ?? body.name, 120);
+  const email = text(userData.email ?? body.email, 200);
+  const birthDate = text(userData.birthDate ?? body.birthDate, 20);
 
-  const payload = {
-    amount: {
-      value: plan.price.toFixed(2),
-      currency: "RUB",
-    },
-    capture: true,
-    confirmation: {
-      type: "redirect",
-      return_url: `${origin}/thank-you?plan=${plan.id}`,
-    },
-    description: `Нумерологический расчёт — ${plan.title}`,
-    metadata: {
-      plan: plan.id,
-      name,
-      email,
-    },
-    ...(email
-      ? {
-          receipt: {
-            customer: { email },
-            items: [
-              {
-                description: `Нумерологический расчёт — ${plan.title}`,
-                quantity: "1.00",
-                amount: { value: plan.price.toFixed(2), currency: "RUB" },
-                vat_code: 1,
-                payment_mode: "full_payment",
-                payment_subject: "service",
-              },
-            ],
-          },
-        }
-      : {}),
-  };
+  const orderId = crypto.randomUUID();
+  const returnUrl = `${originFrom(request)}/thank-you?plan=${plan.id}&order=${orderId}`;
 
   try {
-    const response = await fetch(YOOKASSA_API, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Idempotence-Key": crypto.randomUUID(),
-        Authorization: `Basic ${Buffer.from(`${SHOP_ID}:${secretKey}`).toString("base64")}`,
-      },
-      body: JSON.stringify(payload),
-      cache: "no-store",
-    });
-
-    const result = (await response.json()) as {
-      id?: string;
-      confirmation?: { confirmation_url?: string };
-      description?: string;
-    };
-
-    if (!response.ok || !result.confirmation?.confirmation_url) {
-      console.error("YooKassa payment error", response.status, result);
-      return NextResponse.json(
-        { error: "Платёжная система отклонила запрос. Попробуйте позже." },
-        { status: 502 }
-      );
-    }
+    const payment = await createPayment(
+      plan.price,
+      orderId,
+      DESCRIPTIONS[plan.id],
+      returnUrl,
+      {
+        email: email || undefined,
+        metadata: { plan: plan.id, name, email, birthDate },
+      }
+    );
 
     return NextResponse.json({
-      paymentId: result.id,
-      confirmationUrl: result.confirmation.confirmation_url,
+      orderId,
+      paymentId: payment.id,
+      confirmationUrl: payment.confirmationUrl,
     });
   } catch (cause) {
-    console.error("YooKassa request failed", cause);
+    console.error("[checkout] payment creation failed", {
+      plan: plan.id,
+      message: cause instanceof Error ? cause.message : "unknown",
+    });
     return NextResponse.json(
-      { error: "Не удалось связаться с платёжной системой." },
+      { error: "Не удалось создать платёж. Попробуйте ещё раз." },
       { status: 502 }
     );
   }

@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /result
+Disallow: /thank-you
+Disallow: /api/
+Sitemap: https://numerology-destiny.vercel.app/sitemap.xml

@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Node-скрипты сборки ассетов используют CommonJS и не входят в бандл.
+    "scripts/**",
   ]),
 ]);
 

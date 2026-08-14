@@ -150,7 +150,11 @@ export default function ResultView() {
           </p>
         </div>
 
-        <PricingCards name={data.name} email={data.email} />
+        <PricingCards
+          name={data.name}
+          email={data.email}
+          birthDate={data.birthDate}
+        />
       </div>
 
       <SiteFooter />

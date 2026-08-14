@@ -118,6 +118,8 @@ export default function Hero() {
                   required
                   autoComplete="given-name"
                   placeholder="Ваше имя"
+                  aria-label="Ваше имя"
+                  aria-required="true"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   className="field-input mt-2"
@@ -136,6 +138,8 @@ export default function Hero() {
                   required
                   min="1920-01-01"
                   max="2020-12-31"
+                  aria-label="Дата рождения"
+                  aria-required="true"
                   value={birthDate}
                   onChange={(event) => setBirthDate(event.target.value)}
                   className="field-input mt-2"
@@ -154,6 +158,8 @@ export default function Hero() {
                   required
                   autoComplete="email"
                   placeholder="Email для получения полного расчёта"
+                  aria-label="Email для получения полного расчёта"
+                  aria-required="true"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   className="field-input mt-2"
@@ -161,7 +167,12 @@ export default function Hero() {
                 />
               </div>
 
-              <button type="submit" className="btn-primary mt-2" disabled={isSubmitting}>
+              <button
+                type="submit"
+                className="btn-primary mt-2"
+                disabled={isSubmitting}
+                aria-label="Рассчитать число судьбы по дате рождения и имени"
+              >
                 {isSubmitting ? "Рассчитываем…" : "Рассчитать число судьбы"}
               </button>
             </div>
