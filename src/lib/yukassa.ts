@@ -58,7 +58,8 @@ export async function createPayment(
   const payload = {
     amount: { value, currency: "RUB" },
     capture: true,
-    payment_method_data: { type: "bank_card" },
+    // Без payment_method_data ЮKassa показывает все подключённые способы
+    // оплаты: карта, SberPay, СБП, T-Pay, ЮMoney.
     confirmation: {
       type: "redirect",
       return_url: returnUrl,
