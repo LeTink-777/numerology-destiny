@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Check, RotateCcw, Shield, Users, X } from "lucide-react";
 import CountdownTimer from "./CountdownTimer";
 import { useClientSnapshot } from "@/lib/client-store";
-import { getSpotsLeft } from "@/lib/storage";
+import { getSpotsLeft, savePendingOrder } from "@/lib/storage";
 import { formatPrice, PLANS, type PlanId } from "@/lib/site";
 
 type Feature = { text: string; included: boolean };
@@ -96,12 +96,21 @@ export default function PricingCards({ name, email, birthDate }: Props) {
 
       const payload = (await response.json()) as {
         confirmationUrl?: string;
+        orderId?: string;
+        paymentId?: string;
         error?: string;
       };
 
       if (!response.ok || !payload.confirmationUrl) {
         throw new Error(payload.error || "Не удалось создать платёж");
       }
+
+      // Нужен /thank-you, чтобы подтвердить оплату при скачивании PDF.
+      savePendingOrder({
+        plan,
+        orderId: payload.orderId ?? null,
+        paymentId: payload.paymentId ?? null,
+      });
 
       window.location.assign(payload.confirmationUrl);
     } catch (cause) {

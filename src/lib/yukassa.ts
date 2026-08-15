@@ -31,6 +31,37 @@ function authHeader(secretKey: string): string {
   return `Basic ${Buffer.from(`${SHOP_ID}:${secretKey}`).toString("base64")}`;
 }
 
+export type YookassaPayment = {
+  id: string;
+  status: string;
+  paid?: boolean;
+  metadata?: Record<string, string>;
+};
+
+/**
+ * Читает платёж по идентификатору.
+ *
+ * Нужен, чтобы подтвердить: запрос на скачивание относится к реально
+ * оплаченному заказу, и чтобы взять данные покупателя из самого платежа,
+ * а не из тела запроса браузера.
+ */
+export async function getPayment(paymentId: string): Promise<YookassaPayment | null> {
+  const secretKey = process.env.YUKASSA_SECRET_KEY;
+  if (!secretKey) {
+    throw new Error("YUKASSA_SECRET_KEY не задан");
+  }
+
+  const response = await fetch(`${YOOKASSA_API}/${encodeURIComponent(paymentId)}`, {
+    method: "GET",
+    headers: { Authorization: authHeader(secretKey) },
+    cache: "no-store",
+  });
+
+  if (!response.ok) return null;
+
+  return (await response.json()) as YookassaPayment;
+}
+
 /**
  * Создаёт платёж и возвращает ссылку на страницу оплаты.
  *
