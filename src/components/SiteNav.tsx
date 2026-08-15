@@ -10,9 +10,17 @@ export default function SiteNav() {
         >
           Нумерология
         </Link>
-        <span className="text-[12px] tracking-[0.08em] text-muted md:text-[13px]">
-          Персональный расчёт
-        </span>
+        <nav className="flex items-center gap-5">
+          <Link
+            href="/blog"
+            className="text-[13px] text-navy transition-colors hover:text-gold md:text-[14px]"
+          >
+            Блог
+          </Link>
+          <span className="text-[12px] tracking-[0.08em] text-muted md:text-[13px]">
+            Персональный расчёт
+          </span>
+        </nav>
       </div>
     </header>
   );

@@ -1,6 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /result
-Disallow: /thank-you
-Disallow: /api/
-Sitemap: https://www.moe-chislo.ru/sitemap.xml
