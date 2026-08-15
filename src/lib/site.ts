@@ -1,6 +1,6 @@
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-  "https://numerology-destiny.vercel.app";
+  "https://www.moe-chislo.ru";
 
 export const OWNER = {
   fullName: "Евдокимов Даниил Владимирович",

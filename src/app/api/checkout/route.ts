@@ -31,9 +31,38 @@ function text(value: unknown, max = 200): string {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
 
+/**
+ * Хосты, на которые разрешено возвращать покупателя после оплаты.
+ * Origin приходит из запроса, поэтому доверять ему без проверки нельзя:
+ * иначе ЮKassa увела бы покупателя на произвольный адрес.
+ */
+const ALLOWED_RETURN_HOSTS = new Set([
+  "moe-chislo.ru",
+  "www.moe-chislo.ru",
+  "numerology-destiny.vercel.app",
+  new URL(SITE_URL).hostname,
+]);
+
 function originFrom(request: Request): string {
   const headerOrigin = request.headers.get("origin");
-  if (headerOrigin) return headerOrigin.replace(/\/$/, "");
+  if (!headerOrigin) return SITE_URL;
+
+  try {
+    const origin = new URL(headerOrigin);
+    if (origin.protocol === "https:" && ALLOWED_RETURN_HOSTS.has(origin.hostname)) {
+      return origin.origin;
+    }
+    // Локальная разработка: http://localhost:3000 остаётся рабочим.
+    if (
+      process.env.NODE_ENV !== "production" &&
+      (origin.hostname === "localhost" || origin.hostname === "127.0.0.1")
+    ) {
+      return origin.origin;
+    }
+  } catch {
+    // Некорректный Origin — молча используем канонический адрес.
+  }
+
   return SITE_URL;
 }
 
